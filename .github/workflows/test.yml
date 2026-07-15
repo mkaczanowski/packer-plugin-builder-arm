@@ -17,18 +17,18 @@ jobs:
     steps:
       - name: Retrieve cache
         id: cache-key
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packer-plugin-builder-arm
           key: key-${{ github.sha }}-1
 
       - name: Checkout
         if: steps.cache-key.outputs.cache-hit != 'true'
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v7.0.0
 
       - name: Set up Go
         if: steps.cache-key.outputs.cache-hit != 'true'
-        uses: actions/setup-go@v5.0.0
+        uses: actions/setup-go@v6.5.0
         with:
           go-version-file: go.mod
         id: go
@@ -48,7 +48,7 @@ jobs:
 
       - name: Cache binary
         if: steps.cache-key.outputs.cache-hit != 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packer-plugin-builder-arm
           key: key-${{ github.sha }}-1
@@ -89,7 +89,7 @@ jobs:
       PACKER_PLUGIN_PATH: ${{ github.workspace }}/.packer_plugins
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v7.0.0
 
       - name: Fetch additional packages
         run: |
@@ -97,12 +97,12 @@ jobs:
           sudo apt-get install fdisk gdisk qemu-user-static libarchive-tools tar qemu qemu-utils
 
       - name: Install Packer
-        uses: hashicorp-contrib/setup-packer@v3
+        uses: hashicorp-contrib/setup-packer@v4
         with:
           packer-version: 1.15.4
 
       - name: Retrieve cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packer-plugin-builder-arm
           key: key-${{ github.sha }}-1
@@ -124,16 +124,16 @@ jobs:
 
   test-vagrant:
     needs: compile
-    runs-on: macos-12
+    runs-on: macos-14
     name: Build board with vagrant
     steps:
       - name: Check GitHub Status
-        uses: crazy-max/ghaction-github-status@v4
+        uses: crazy-max/ghaction-github-status@v5
 
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v7.0.0
 
       - name: Cache Vagrant boxes
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.vagrant.d/boxes
           key: ${{ runner.os }}-vagrant-${{ hashFiles('Vagrantfile') }}
@@ -162,7 +162,7 @@ jobs:
           "
 
       - name: Retrieve cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: packer-plugin-builder-arm
           key: key-${{ github.sha }}-1
