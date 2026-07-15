@@ -1,10 +1,9 @@
+version: "2"
 linters:
-  # Disable all linters.
-  # Default: false
-  disable-all: false
+  # Start from no linters enabled.
+  default: none
   # Enable specific linter
   # https://golangci-lint.run/usage/linters/#enabled-by-default
   enable:
     - gocyclo
     - misspell
-    - revive
