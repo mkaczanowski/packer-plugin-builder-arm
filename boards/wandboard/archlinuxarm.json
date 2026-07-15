@@ -9,7 +9,7 @@
     "file_target_extension": "tar.gz",
     "image_build_method": "new",
     "image_path": "wandboard.img",
-    "image_size": "2G",
+    "image_size": "4G",
     "image_type": "dos",
     "image_partitions": [
       {
