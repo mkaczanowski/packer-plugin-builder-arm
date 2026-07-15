@@ -1,31 +1,11 @@
 # See https://www.packer.io/docs/templates/hcl_templates/blocks/packer for more info
 packer {
   required_plugins {
-    docker = {
-      source  = "github.com/hashicorp/docker"
-      version = "~> 1"
-    }
     arm = {
       source  = "github.com/mkaczanowski/arm"
       version = ">= 1.0.9"
     }
   }
-}
-
-# https://www.packer.io/docs/templates/hcl_templates/variables#type-constraints for more info.
-variable "docker_password" {
-  type    = string
-  default = ""
-}
-
-variable "docker_repository" {
-  type    = string
-  default = ""
-}
-
-variable "docker_user" {
-  type    = string
-  default = ""
 }
 
 # https://www.packer.io/docs/templates/hcl_templates/blocks/source
@@ -63,21 +43,5 @@ build {
       "pacman-key --populate archlinuxarm",
       "echo 'Server = http://hu.mirror.archlinuxarm.org/$arch/$repo' >> /etc/pacman.d/mirrorlist"
     ]
-  }
-
-  post-processors {
-    post-processor "artifice" {
-      files = ["armv8.tar.gz"]
-    }
-    post-processor "docker-import" {
-      platform   = "linux/arm64"
-      repository = "${var.docker_repository}"
-      tag        = "armv8"
-    }
-    post-processor "docker-push" {
-      login          = true
-      login_password = "${var.docker_password}"
-      login_username = "${var.docker_user}"
-    }
   }
 }
