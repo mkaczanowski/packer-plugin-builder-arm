@@ -2,7 +2,6 @@
 
 [![Build Status][github-badge]][github]
 [![GoDoc][godoc-badge]][godoc]
-[![GoReportCard][report-badge]][report]
 [![Docker Pulls][docker-pulls]][docker-hub]
 [![Docker Image Size][docker-size]][docker-hub]
 [![Docker Image Version][docker-version]][docker-hub]
@@ -11,8 +10,6 @@
 [github]: https://github.com/mkaczanowski/packer-plugin-builder-arm/actions
 [godoc-badge]: https://godoc.org/github.com/mkaczanowski/packer-plugin-builder-arm?status.svg
 [godoc]: https://godoc.org/github.com/mkaczanowski/packer-plugin-builder-arm
-[report-badge]: https://goreportcard.com/badge/github.com/mkaczanowski/packer-plugin-builder-arm
-[report]: https://goreportcard.com/report/github.com/mkaczanowski/packer-plugin-builder-arm
 [docker-hub]: https://hub.docker.com/r/mkaczanowski/packer-plugin-builder-arm
 [docker-pulls]: https://img.shields.io/docker/pulls/mkaczanowski/packer-plugin-builder-arm
 [docker-size]: https://img.shields.io/docker/image-size/mkaczanowski/packer-plugin-builder-arm
