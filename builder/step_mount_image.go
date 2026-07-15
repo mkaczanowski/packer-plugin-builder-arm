@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	cfg "github.com/mkaczanowski/packer-builder-arm/config"
+	cfg "github.com/mkaczanowski/packer-plugin-builder-arm/config"
 )
 
 func sortMountablePartitions(partitions []cfg.Partition, reverse bool) []cfg.Partition {

@@ -39,7 +39,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            mkaczanowski/packer-builder-arm
+            mkaczanowski/packer-plugin-builder-arm
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -53,18 +53,18 @@ jobs:
           context: .
           file: docker/Dockerfile
           load: true
-          tags: packer-builder-arm:test
+          tags: packer-plugin-builder-arm:test
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Install packer plugins
         if: github.event_name == 'pull_request'
         run: |
-          docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build packer-builder-arm:test init boards/raspberry-pi-4/archlinuxarm.pkr.hcl
+          docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build packer-plugin-builder-arm:test init boards/raspberry-pi-4/archlinuxarm.pkr.hcl
 
       - name: Test build board
         if: github.event_name == 'pull_request'
         run: |
-          docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build packer-builder-arm:test build boards/raspberry-pi-4/archlinuxarm.pkr.hcl -extra-system-packages=bmap-tools,zstd
+          docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build packer-plugin-builder-arm:test build boards/raspberry-pi-4/archlinuxarm.pkr.hcl -extra-system-packages=bmap-tools,zstd
           du -h raspberry-pi-4.img
           du -h --apparent-size raspberry-pi-4.img
       ####

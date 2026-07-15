@@ -67,6 +67,9 @@ export DONT_SETUP_QEMU=1
 mkdir -p "${PACKER_PLUGIN_PATH}"
 mkdir -p "${PACKER_CACHE_DIR}"
 
+# register the bundled arm plugin (no-op if already installed at this version)
+"${PACKER}" plugins install --path /bin/packer-plugin-builder-arm github.com/mkaczanowski/arm
+
 echo running "${PACKER}" "${@}"
 
 exec "${PACKER}" "${@}"

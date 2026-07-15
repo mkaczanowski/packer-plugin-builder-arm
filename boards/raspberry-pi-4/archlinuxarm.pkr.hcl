@@ -4,6 +4,10 @@ packer {
       version = ">=v0.3.2"
       source  = "github.com/ethanmdavidson/git"
     }
+    arm = {
+      version = ">= 1.0.9"
+      source  = "github.com/mkaczanowski/arm"
+    }
   }
 }
 

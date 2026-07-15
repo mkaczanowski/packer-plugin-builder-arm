@@ -4,7 +4,7 @@ package builder
 
 import (
 	"github.com/hashicorp/hcl/v2/hcldec"
-	"github.com/mkaczanowski/packer-builder-arm/config"
+	"github.com/mkaczanowski/packer-plugin-builder-arm/config"
 	"github.com/zclconf/go-cty/cty"
 )
 

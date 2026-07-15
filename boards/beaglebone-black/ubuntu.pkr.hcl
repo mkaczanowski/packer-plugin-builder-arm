@@ -1,3 +1,12 @@
+packer {
+  required_plugins {
+    arm = {
+      version = ">= 1.0.9"
+      source  = "github.com/mkaczanowski/arm"
+    }
+  }
+}
+
 source "arm" "ubuntu" {
   file_checksum         = "378adf5394ca0ae1e24ba434205ae93d579b29fe97da044905f6935ff9834098"
   file_checksum_type    = "sha256"

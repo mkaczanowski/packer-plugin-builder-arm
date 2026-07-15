@@ -1,4 +1,4 @@
-# Packer builder ARM
+# Packer Plugin Builder ARM
 
 [![Build Status][github-badge]][github]
 [![GoDoc][godoc-badge]][godoc]
@@ -7,16 +7,16 @@
 [![Docker Image Size][docker-size]][docker-hub]
 [![Docker Image Version][docker-version]][docker-hub]
 
-[github-badge]:https://img.shields.io/github/actions/workflow/status/mkaczanowski/packer-builder-arm/docker.yml?branch=master
-[github]: https://github.com/mkaczanowski/packer-builder-arm/actions
-[godoc-badge]: https://godoc.org/github.com/mkaczanowski/packer-builder-arm?status.svg
-[godoc]: https://godoc.org/github.com/mkaczanowski/packer-builder-arm
-[report-badge]: https://goreportcard.com/badge/github.com/mkaczanowski/packer-builder-arm
-[report]: https://goreportcard.com/report/github.com/mkaczanowski/packer-builder-arm
-[docker-hub]: https://hub.docker.com/r/mkaczanowski/packer-builder-arm
-[docker-pulls]: https://img.shields.io/docker/pulls/mkaczanowski/packer-builder-arm
-[docker-size]: https://img.shields.io/docker/image-size/mkaczanowski/packer-builder-arm
-[docker-version]: https://img.shields.io/docker/v/mkaczanowski/packer-builder-arm?sort=semver
+[github-badge]:https://img.shields.io/github/actions/workflow/status/mkaczanowski/packer-plugin-builder-arm/docker.yml?branch=master
+[github]: https://github.com/mkaczanowski/packer-plugin-builder-arm/actions
+[godoc-badge]: https://godoc.org/github.com/mkaczanowski/packer-plugin-builder-arm?status.svg
+[godoc]: https://godoc.org/github.com/mkaczanowski/packer-plugin-builder-arm
+[report-badge]: https://goreportcard.com/badge/github.com/mkaczanowski/packer-plugin-builder-arm
+[report]: https://goreportcard.com/report/github.com/mkaczanowski/packer-plugin-builder-arm
+[docker-hub]: https://hub.docker.com/r/mkaczanowski/packer-plugin-builder-arm
+[docker-pulls]: https://img.shields.io/docker/pulls/mkaczanowski/packer-plugin-builder-arm
+[docker-size]: https://img.shields.io/docker/image-size/mkaczanowski/packer-plugin-builder-arm
+[docker-version]: https://img.shields.io/docker/v/mkaczanowski/packer-plugin-builder-arm?sort=semver
 
 
 This plugin allows you to build or extend ARM system image. It operates in two modes:
@@ -51,35 +51,51 @@ Since the setup varies a lot for different hardware types, the example configura
 
 # Quick start
 ```
-git clone https://github.com/mkaczanowski/packer-builder-arm
-cd packer-builder-arm
+git clone https://github.com/mkaczanowski/packer-plugin-builder-arm
+cd packer-plugin-builder-arm
 go mod download
-go build
+go build -o packer-plugin-builder-arm
 
-sudo packer build boards/odroid-u3/archlinuxarm.json
+# register the locally-built plugin with packer (one-time, or whenever you rebuild)
+packer plugins install --path ./packer-plugin-builder-arm github.com/mkaczanowski/arm
+
+sudo -E packer build boards/odroid-u3/archlinuxarm.json
 ```
+
+Since this is a multi-component plugin, HCL2 templates should declare it in a `required_plugins` block so `packer init` knows what version is expected:
+```hcl
+packer {
+  required_plugins {
+    arm = {
+      source  = "github.com/mkaczanowski/arm"
+      version = ">= 1.0.9"
+    }
+  }
+}
+```
+Legacy JSON templates (`"type": "arm"` builders) don't support `required_plugins`, but work the same way once the plugin has been installed with `packer plugins install`.
 ## Run in Docker
 This method is primarily for macOS users where is no native way to use qemu-user-static, loop mount Linux specific filesystems and install all above mentioned Linux specific tools (or Linux users, who do not want to setup packer and all the tools).
 
 The container is a multi-arch container (linux/amd64 or linux/arm64), that can be used on Intel (x86_64) or Apple M1 (arm64) Macs and also on Linux machines running linux (x86_64 or aarch64) kernels.
 
-> **_NOTE:_** On Macs: Don't run `go build .` (that produces a **darwin** binary) and then run below `docker run ...` commands from the same folder to avoid the error `error initializing builder 'arm': fork/exec /build/packer-builder-arm: exec
-format error` (**linux** packer process within docker fails to load the outside container compiled packer-builder-arm binary due to being a **darwin** binary). Delete any local binary via `rm -r packer-*` to solely use the binary already included and provided by the container.
+> **_NOTE:_** On Macs: Don't run `go build .` (that produces a **darwin** binary) and then run below `docker run ...` commands from the same folder to avoid the error `error initializing builder 'arm': fork/exec /build/packer-plugin-builder-arm: exec
+format error` (**linux** packer process within docker fails to load the outside container compiled packer-plugin-builder-arm binary due to being a **darwin** binary). Delete any local binary via `rm -r packer-*` to solely use the binary already included and provided by the container.
 
 ### Usage via container from Docker Hub:
 
 Pull the latest version of the container to ensure the next commands are not using an old cached version of the container :
 ```
-docker pull mkaczanowski/packer-builder-arm:latest
+docker pull mkaczanowski/packer-plugin-builder-arm:latest
 ```
 
 Build a board:
 ```
-docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build mkaczanowski/packer-builder-arm:latest build boards/raspberry-pi/raspbian.json
+docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build mkaczanowski/packer-plugin-builder-arm:latest build boards/raspberry-pi/raspbian.json
 ```
 Build a board with more system packages (e.g. bmap-tools, zstd) can be added via the parameter `-extra-system-packages=...`:
 ```
-docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build mkaczanowski/packer-builder-arm:latest build boards/raspberry-pi/raspbian.json -extra-system-packages=bmap-tools,zstd
+docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build mkaczanowski/packer-plugin-builder-arm:latest build boards/raspberry-pi/raspbian.json -extra-system-packages=bmap-tools,zstd
 ```
 
 > **_NOTE:_** In above commands **latest** can also be replaced via e.g. **1.0.3** to get a specific container version.
@@ -87,11 +103,11 @@ docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build mkaczanowski/packer-b
 ### Usage via local container build (supports amd64/aarch64 hosts):
 Build the container locally:
 ```
-docker build -t packer-builder-arm -f docker/Dockerfile .
+docker build -t packer-plugin-builder-arm -f docker/Dockerfile .
 ```
 Run packer via the local built container:
 ```
-docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build packer-builder-arm build boards/raspberry-pi/raspbian.json
+docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build packer-plugin-builder-arm build boards/raspberry-pi/raspbian.json
 ```
 
 # Dependencies
@@ -275,7 +291,7 @@ problems, the first question you should ask yourself is:
 To answer that question, I'd recommend reproducing the error on the VM, for
 instance:
 ```
-cd packer-builder-arm
+cd packer-plugin-builder-arm
 vagrant up
 vagrant provision
 ```

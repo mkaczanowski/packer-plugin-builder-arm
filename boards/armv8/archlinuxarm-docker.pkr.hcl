@@ -5,6 +5,10 @@ packer {
       source  = "github.com/hashicorp/docker"
       version = "~> 1"
     }
+    arm = {
+      source  = "github.com/mkaczanowski/arm"
+      version = ">= 1.0.9"
+    }
   }
 }
 

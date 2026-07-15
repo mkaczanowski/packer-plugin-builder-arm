@@ -14,7 +14,7 @@ RUN mkdir -p /binaries && \
         cp /usr/bin/qemu-arm-static /binaries/; \
     fi
 
-FROM golang:1.21-bullseye AS builder
+FROM golang:1.26-bookworm AS builder
 
 # hadolint ignore=DL3008
 RUN apt-get update -qq \
@@ -30,7 +30,7 @@ WORKDIR /build
 
 COPY . .
 
-RUN go build -o packer-builder-arm
+RUN go build -o packer-plugin-builder-arm
 
 ENV PACKER_VERSION 1.10.0
 
@@ -41,7 +41,7 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then PACKER_ARCH="arm64"; else PACKER_ARCH
   rm /tmp/packer.zip
 
 # COMPRESS WITH UPX
-RUN upx-ucl --lzma /build/packer-builder-arm /bin/packer
+RUN upx-ucl --lzma /build/packer-plugin-builder-arm /bin/packer
 
 FROM public.ecr.aws/lts/ubuntu:noble
 
@@ -64,14 +64,15 @@ RUN apt-get update -qq \
 WORKDIR /build
 
 COPY docker/entrypoint.sh /entrypoint.sh
-COPY --from=builder /build/packer-builder-arm /bin/packer /bin/
+COPY --from=builder /build/packer-plugin-builder-arm /bin/packer /bin/
 COPY --from=qemu_binaries /binaries/* /usr/bin/
 
 # Enable detailed logging
 ENV PACKER_LOG=1
 
-# Enable plugin / download caching for consecutive runs
-ENV PACKER_PLUGIN_PATH="/bin:/build/.packer_plugins"
+# Packer plugins (including the bundled arm plugin, installed by entrypoint.sh)
+# and downloads are cached here across consecutive runs.
+ENV PACKER_PLUGIN_PATH="/build/.packer_plugins"
 ENV PACKER_CACHE_DIR="/build/.packer_cache"
 
 ENTRYPOINT ["/entrypoint.sh"]

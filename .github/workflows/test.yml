@@ -19,18 +19,18 @@ jobs:
         id: cache-key
         uses: actions/cache@v4
         with:
-          path: packer-builder-arm
+          path: packer-plugin-builder-arm
           key: key-${{ github.sha }}-1
 
       - name: Checkout
         if: steps.cache-key.outputs.cache-hit != 'true'
         uses: actions/checkout@v4.1.1
 
-      - name: Set up Go 1.21
+      - name: Set up Go
         if: steps.cache-key.outputs.cache-hit != 'true'
         uses: actions/setup-go@v5.0.0
         with:
-          go-version: '1.21'
+          go-version-file: go.mod
         id: go
 
       - name: Get dependencies
@@ -44,13 +44,13 @@ jobs:
 
       - name: Build
         if: steps.cache-key.outputs.cache-hit != 'true'
-        run: go build -v .
+        run: go build -v -o packer-plugin-builder-arm .
 
       - name: Cache binary
         if: steps.cache-key.outputs.cache-hit != 'true'
         uses: actions/cache@v4
         with:
-          path: packer-builder-arm
+          path: packer-plugin-builder-arm
           key: key-${{ github.sha }}-1
 
   test:
@@ -83,6 +83,10 @@ jobs:
           - wandboard/archlinuxarm.json
     name: Build ${{ matrix.boards }} image
     runs-on: ubuntu-latest
+    env:
+      # shared so that `sudo packer build` (which resets HOME) still finds
+      # the arm plugin installed by the non-sudo steps below
+      PACKER_PLUGIN_PATH: ${{ github.workspace }}/.packer_plugins
     steps:
       - name: Checkout
         uses: actions/checkout@v4.1.1
@@ -95,13 +99,18 @@ jobs:
       - name: Install Packer
         uses: hashicorp-contrib/setup-packer@v3
         with:
-          packer-version: 1.10.0
+          packer-version: 1.15.4
 
       - name: Retrieve cache
         uses: actions/cache@v4
         with:
-          path: packer-builder-arm
+          path: packer-plugin-builder-arm
           key: key-${{ github.sha }}-1
+
+      - name: Install arm plugin
+        run: |
+          chmod +x packer-plugin-builder-arm
+          packer plugins install --path ./packer-plugin-builder-arm github.com/mkaczanowski/arm
 
       - name: Install packer plugins
         if: ${{ endsWith(matrix.boards, '.hcl') }}
@@ -111,7 +120,7 @@ jobs:
         run: PACKER_LOG=1 packer validate boards/${{ matrix.boards }}
 
       - name: Build image
-        run: sudo PACKER_LOG=1 packer build boards/${{ matrix.boards }}
+        run: sudo env "PACKER_PLUGIN_PATH=$PACKER_PLUGIN_PATH" PACKER_LOG=1 packer build boards/${{ matrix.boards }}
 
   test-vagrant:
     needs: compile
@@ -147,28 +156,31 @@ jobs:
           git archive -o repo.tar.gz HEAD
           vagrant upload repo.tar.gz /home/vagrant/repo.tar.gz
           vagrant ssh -c " \
-            rm -rf packer-builder-arm && \
-            mkdir packer-builder-arm && \
-            tar -xf repo.tar.gz -C packer-builder-arm \
+            rm -rf packer-plugin-builder-arm && \
+            mkdir packer-plugin-builder-arm && \
+            tar -xf repo.tar.gz -C packer-plugin-builder-arm \
           "
 
       - name: Retrieve cache
         uses: actions/cache@v4
         with:
-          path: packer-builder-arm
+          path: packer-plugin-builder-arm
           key: key-${{ github.sha }}-1
 
-      - name: Upload packer-build-arm binary
+      - name: Upload packer-plugin-builder-arm binary
         run: |
-          vagrant upload packer-builder-arm /home/vagrant/packer-builder-arm/packer-builder-arm
+          vagrant upload packer-plugin-builder-arm /home/vagrant/packer-plugin-builder-arm/packer-plugin-builder-arm
 
       - name: Build board
         run: |
           vagrant ssh -c " \
-            cd packer-builder-arm && \
-            sudo PACKER_LOG=1 packer build boards/raspberry-pi-3/archlinuxarm.json \
+            cd packer-plugin-builder-arm && \
+            chmod +x packer-plugin-builder-arm && \
+            export PACKER_PLUGIN_PATH=\$PWD/.packer_plugins && \
+            packer plugins install --path ./packer-plugin-builder-arm github.com/mkaczanowski/arm && \
+            sudo env PACKER_PLUGIN_PATH=\$PACKER_PLUGIN_PATH PACKER_LOG=1 packer build boards/raspberry-pi-3/archlinuxarm.json \
           "
 
       - name: Check result
         run: |
-          vagrant ssh -c "ls -al packer-builder-arm/raspberry-pi-3.img"
+          vagrant ssh -c "ls -al packer-plugin-builder-arm/raspberry-pi-3.img"
