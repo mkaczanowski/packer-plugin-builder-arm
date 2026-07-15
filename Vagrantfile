@@ -17,10 +17,10 @@ Vagrant.configure("2") do |config|
     apt-get update
     apt-get install -y qemu-user-static packer libarchive-tools
     #apt-get install -y git golang
-    #rm -rf packer-builder-arm *>/dev/null
+    #rm -rf packer-plugin-builder-arm *>/dev/null
 
-    #git clone https://github.com/mkaczanowski/packer-builder-arm
-    #cd packer-builder-arm
+    #git clone https://github.com/mkaczanowski/packer-plugin-builder-arm
+    #cd packer-plugin-builder-arm
     #go mod download
     #go build
 
