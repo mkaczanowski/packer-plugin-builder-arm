@@ -59,11 +59,12 @@ jobs:
       fail-fast: false
       matrix:
         boards:
-          - bananapi-r1/archlinuxarm.json
+          # FIXME: - bananapi-r1/archlinuxarm.json
           - beaglebone-black/angstrom.json
           - beaglebone-black/archlinuxarm.json
           - beaglebone-black/debian.json
-          - jetson-nano/ubuntu.json
+          # jetson-nano works, but takes too much time to build for CI
+          # - jetson-nano/ubuntu.json
           - odroid-u3/archlinuxarm.json
           - odroid-xu4/archlinuxarm.json
           - odroid-xu4/ubuntu.json
