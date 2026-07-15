@@ -124,7 +124,7 @@ jobs:
 
   test-vagrant:
     needs: compile
-    runs-on: macos-14
+    runs-on: macos-13
     name: Build board with vagrant
     steps:
       - name: Check GitHub Status
