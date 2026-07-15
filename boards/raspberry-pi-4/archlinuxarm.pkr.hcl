@@ -50,8 +50,8 @@ build {
       "echo 'nameserver 8.8.8.8' > /etc/resolv.conf",
       "pacman-key --init",
       "pacman-key --populate archlinuxarm",
-      "pacman -Sy --noconfirm --needed",
-      "pacman -S parted --noconfirm --needed"
+      "pacman -Sy --disable-sandbox --noconfirm --needed",
+      "pacman -S --disable-sandbox parted --noconfirm --needed"
     ]
   }
 

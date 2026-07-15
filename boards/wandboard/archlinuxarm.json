@@ -36,7 +36,7 @@
         "rm -f /etc/resolv.conf",
         "echo 'nameserver 8.8.8.8' > /etc/resolv.conf",
         "rm /boot/boot.scr",
-        "yes | pacman -Sy uboot-wandboard"
+        "yes | pacman -Sy --disable-sandbox uboot-wandboard"
       ]
     }
   ],

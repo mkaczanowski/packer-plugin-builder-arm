@@ -140,6 +140,8 @@ The `file_unarchive_cmd` is optional and should be used if the standard golang a
 
 Raw images format (`.img` or `.iso`) can be used by defining the `file_target_extension` appropriately.
 
+Some mirrors reject requests carrying the default HTTP client User-Agent. In that case, set `file_user_agent` to override it, e.g. `"file_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0"`.
+
 ## Image config
 The base image description (size, partitions, mountpoints etc).
 

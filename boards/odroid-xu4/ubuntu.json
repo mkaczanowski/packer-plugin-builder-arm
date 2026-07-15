@@ -2,8 +2,9 @@
   "variables": {},
   "builders": [{
     "type": "arm",
-    "file_urls" : ["http://de.eu.odroid.in/ubuntu_18.04lts/XU3_XU4_MC1_HC1_HC2/ubuntu-18.04.1-4.14-mate-odroid-xu4-20181203.img.xz"],
-    "file_checksum_url": "http://de.eu.odroid.in/ubuntu_18.04lts/XU3_XU4_MC1_HC1_HC2/ubuntu-18.04.1-4.14-mate-odroid-xu4-20181203.img.xz.md5sum",
+    "file_urls" : ["https://odroid.in/ubuntu_18.04lts/XU3_XU4_MC1_HC1_HC2/ubuntu-18.04.3-4.14-minimal-odroid-xu4-20190910.img.xz"],
+    "file_checksum_url": "https://odroid.in/ubuntu_18.04lts/XU3_XU4_MC1_HC1_HC2/ubuntu-18.04.3-4.14-minimal-odroid-xu4-20190910.img.xz.md5sum",
+    "file_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
     "file_unarchive_cmd": ["xz", "-d", "$ARCHIVE_PATH"],
     "file_checksum_type": "md5sum",
     "file_target_extension": "xz",
@@ -37,6 +38,7 @@
     {
       "type": "shell",
       "inline": [
+	"mkdir -p /home/odroid",
         "touch /home/odroid/test_file"
       ]
     }

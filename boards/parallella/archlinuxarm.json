@@ -9,7 +9,7 @@
     "file_target_extension": "tar.gz",
     "image_build_method": "new",
     "image_path": "parallella.img",
-    "image_size": "2G",
+    "image_size": "4G",
     "image_type": "dos",
     "image_partitions": [
       {
@@ -45,8 +45,8 @@
         "echo 'nameserver 8.8.8.8' > /etc/resolv.conf",
         "echo '\n[mkaczanowski]\nServer = https://raw.githubusercontent.com/mkaczanowski/pkgbuilds/master/pkg/$arch\nSigLevel = PackageOptional' >> /etc/pacman.conf",
         "pacman -R linux-armv7 --noconfirm",
-        "pacman -Sy linux-parallella --noconfirm",
-        "pacman -S parallella-fpga-bitstream-headless-7010 --noconfirm",
+        "pacman -Sy --disable-sandbox linux-parallella --noconfirm",
+        "pacman -S --disable-sandbox parallella-fpga-bitstream-headless-7010 --noconfirm",
 
         "echo 'pacman -Sy paralella-examples epiphany-sdk' > /home/alarm/other_packages",
 

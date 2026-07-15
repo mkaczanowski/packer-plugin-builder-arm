@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
@@ -107,13 +106,14 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	}
 
 	steps := []multistep.Step{
-		&commonsteps.StepDownload{
+		&StepDownload{
 			Checksum:    b.config.FileChecksum,
 			Description: "rootfs_archive",
 			ResultKey:   "rootfs_archive_path",
 			Url:         b.config.FileUrls,
 			Extension:   b.config.TargetExtension,
 			TargetPath:  b.config.TargetPath,
+			UserAgent:   b.config.FileUserAgent,
 		},
 	}
 

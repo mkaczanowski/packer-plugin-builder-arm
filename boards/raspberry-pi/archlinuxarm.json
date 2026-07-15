@@ -9,7 +9,7 @@
     "file_target_extension": "tar.gz",
     "image_build_method": "new",
     "image_path": "raspberry-pi.img",
-    "image_size": "2G",
+    "image_size": "4G",
     "image_type": "dos",
     "image_partitions": [
       {
@@ -43,8 +43,8 @@
         "pacman-key --populate archlinuxarm",
         "mv /etc/resolv.conf /etc/resolv.conf.bk",
         "echo 'nameserver 8.8.8.8' > /etc/resolv.conf",
-        "pacman -Sy --noconfirm --needed",
-        "pacman -S parted --noconfirm --needed",
+        "pacman -Sy --disable-sandbox --noconfirm --needed",
+        "pacman -S --disable-sandbox parted --noconfirm --needed",
 
         "umount boot"
       ]

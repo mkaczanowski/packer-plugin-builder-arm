@@ -16,6 +16,7 @@ type FlatConfig struct {
 	FileChecksumType          *string                  `mapstructure:"file_checksum_type" cty:"file_checksum_type" hcl:"file_checksum_type"`
 	FileUrls                  []string                 `mapstructure:"file_urls" cty:"file_urls" hcl:"file_urls"`
 	FileUnarchiveCmd          []string                 `mapstructure:"file_unarchive_cmd" cty:"file_unarchive_cmd" hcl:"file_unarchive_cmd"`
+	FileUserAgent             *string                  `mapstructure:"file_user_agent" cty:"file_user_agent" hcl:"file_user_agent"`
 	TargetPath                *string                  `mapstructure:"file_target_path" cty:"file_target_path" hcl:"file_target_path"`
 	TargetExtension           *string                  `mapstructure:"file_target_extension" cty:"file_target_extension" hcl:"file_target_extension"`
 	TmpDirLocation            *string                  `mapstructure:"file_tmp_dir_location" cty:"file_tmp_dir_location" hcl:"file_tmp_dir_location"`
@@ -51,6 +52,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"file_checksum_type":           &hcldec.AttrSpec{Name: "file_checksum_type", Type: cty.String, Required: false},
 		"file_urls":                    &hcldec.AttrSpec{Name: "file_urls", Type: cty.List(cty.String), Required: false},
 		"file_unarchive_cmd":           &hcldec.AttrSpec{Name: "file_unarchive_cmd", Type: cty.List(cty.String), Required: false},
+		"file_user_agent":              &hcldec.AttrSpec{Name: "file_user_agent", Type: cty.String, Required: false},
 		"file_target_path":             &hcldec.AttrSpec{Name: "file_target_path", Type: cty.String, Required: false},
 		"file_target_extension":        &hcldec.AttrSpec{Name: "file_target_extension", Type: cty.String, Required: false},
 		"file_tmp_dir_location":        &hcldec.AttrSpec{Name: "file_tmp_dir_location", Type: cty.String, Required: false},
