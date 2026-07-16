@@ -22,13 +22,13 @@ jobs:
       - name: Render PKGBUILD for this release
         run: |
           sed "s/^pkgver=.*/pkgver=${{ steps.version.outputs.pkgver }}/" \
-            aur/PKGBUILD > /tmp/PKGBUILD
+            aur/PKGBUILD > "${GITHUB_WORKSPACE}/PKGBUILD.release"
 
       - name: Publish to AUR
         uses: KSXGitHub/github-actions-deploy-aur@v3
         with:
           pkgname: packer-plugin-builder-arm-git
-          pkgbuild: /tmp/PKGBUILD
+          pkgbuild: ./PKGBUILD.release
           commit_username: Mateusz Kaczanowski
           commit_email: kaczanowski.mateusz@gmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
