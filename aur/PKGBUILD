@@ -1,4 +1,4 @@
-# Maintainer: Mateusz Kaczanowski <kaczanowski.mateusz@gmail.com>
+# Maintainer: Mateusz Kaczanowski <mkaczanowski-aur@proton.me>
 pkgname=packer-plugin-builder-arm-git
 pkgver=1.0.9
 pkgrel=1
