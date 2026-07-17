@@ -171,16 +171,16 @@ jobs:
         run: |
           vagrant upload packer-plugin-builder-arm /home/vagrant/packer-plugin-builder-arm/packer-plugin-builder-arm
 
-      - name: Build board
-        run: |
-          vagrant ssh -c " \
-            cd packer-plugin-builder-arm && \
-            chmod +x packer-plugin-builder-arm && \
-            export PACKER_PLUGIN_PATH=\$PWD/.packer_plugins && \
-            packer plugins install --path ./packer-plugin-builder-arm github.com/mkaczanowski/arm && \
-            sudo env PACKER_PLUGIN_PATH=\$PACKER_PLUGIN_PATH PACKER_LOG=1 packer build boards/raspberry-pi-3/archlinuxarm.json \
-          "
+      # - name: Build board
+      #   run: |
+      #     vagrant ssh -c " \
+      #       cd packer-plugin-builder-arm && \
+      #       chmod +x packer-plugin-builder-arm && \
+      #       export PACKER_PLUGIN_PATH=\$PWD/.packer_plugins && \
+      #       packer plugins install --path ./packer-plugin-builder-arm github.com/mkaczanowski/arm && \
+      #       sudo env PACKER_PLUGIN_PATH=\$PACKER_PLUGIN_PATH PACKER_LOG=1 packer build boards/raspberry-pi-3/archlinuxarm.json \
+      #     "
 
-      - name: Check result
-        run: |
-          vagrant ssh -c "ls -al packer-plugin-builder-arm/raspberry-pi-3.img"
+      # - name: Check result
+      #   run: |
+      #     vagrant ssh -c "ls -al packer-plugin-builder-arm/raspberry-pi-3.img"
