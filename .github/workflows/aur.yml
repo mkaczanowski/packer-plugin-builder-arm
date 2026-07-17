@@ -31,7 +31,7 @@ jobs:
           pkgname: packer-plugin-builder-arm-git
           pkgbuild: ./release/PKGBUILD
           commit_username: Mateusz Kaczanowski
-          commit_email: kaczanowski.mateusz@gmail.com
+          commit_email: mkaczanowski-aur@proton.me
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           commit_message: "Update to ${{ github.ref_name }}"
           allow_empty_commits: false
