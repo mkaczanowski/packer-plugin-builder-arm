@@ -24,7 +24,7 @@ jobs:
 
       - name: Checkout
         if: steps.cache-key.outputs.cache-hit != 'true'
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@v7.0.1
 
       - name: Set up Go
         if: steps.cache-key.outputs.cache-hit != 'true'
@@ -89,7 +89,7 @@ jobs:
       PACKER_PLUGIN_PATH: ${{ github.workspace }}/.packer_plugins
     steps:
       - name: Checkout
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@v7.0.1
 
       - name: Fetch additional packages
         run: |
@@ -130,7 +130,7 @@ jobs:
       - name: Check GitHub Status
         uses: crazy-max/ghaction-github-status@v5
 
-      - uses: actions/checkout@v7.0.0
+      - uses: actions/checkout@v7.0.1
 
       - name: Cache Vagrant boxes
         uses: actions/cache@v5

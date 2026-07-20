@@ -13,7 +13,7 @@ jobs:
     # brew install pre-commit shellcheck && pre-commit run -a
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.0
+      - uses: actions/checkout@v7.0.1
       - uses: actions/setup-go@v6.5.0
         with:
           go-version-file: go.mod
@@ -24,7 +24,7 @@ jobs:
     # brew install golangci-lint && golangci-lint run
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.0
+      - uses: actions/checkout@v7.0.1
       - uses: actions/setup-go@v6.5.0
         with:
           go-version-file: go.mod
