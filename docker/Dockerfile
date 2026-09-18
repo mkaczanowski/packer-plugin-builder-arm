@@ -14,7 +14,7 @@ RUN mkdir -p /binaries && \
         cp /usr/bin/qemu-arm-static /binaries/; \
     fi
 
-FROM golang:1.26-trixie AS builder
+FROM golang:1.27-trixie AS builder
 
 # hadolint ignore=DL3008
 RUN apt-get update -qq \
