@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
-// StepMapImage maps system image to /dev/loopX
+// StepMapImage maps a system image to a free loop device and creates partition mappings via kpartx.
 type StepMapImage struct {
 	ResultKey  string
 	loopDevice string
@@ -26,15 +26,21 @@ func (s *StepMapImage) Run(_ context.Context, state multistep.StateBag) multiste
 	ui.Message(fmt.Sprintf("mapping image %s to free loopback device", image))
 
 	out, err := exec.Command("losetup", "--find", "--partscan", "--show", image).CombinedOutput()
-
 	if err != nil {
-		ui.Error(fmt.Sprintf("error losetup --find --partscan %v: %s", err, string(out)))
+		ui.Error(fmt.Sprintf("Error running losetup: %v: %s", err, string(out)))
 		return multistep.ActionHalt
 	}
-	s.loopDevice = strings.Trim(string(out), "\n")
+	s.loopDevice = strings.TrimSpace(string(out))
+
+	out, err = exec.Command("kpartx", "-av", s.loopDevice).CombinedOutput()
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error running kpartx: %v: %s", err, string(out)))
+		return multistep.ActionHalt
+	}
+	s.loopDevice = "/dev/mapper/" + strings.TrimPrefix(s.loopDevice, "/dev/")
 
 	state.Put(s.ResultKey, s.loopDevice)
-	ui.Message(fmt.Sprintf("image %s mapped to %s", image, s.loopDevice))
+	ui.Message(fmt.Sprintf("Image %s mapped to %s", image, s.loopDevice))
 
 	return multistep.ActionContinue
 }
@@ -45,7 +51,15 @@ func (s *StepMapImage) Cleanup(state multistep.StateBag) {
 
 	// Warning: Busy device will prevent detaching loop device from file
 	// https://github.com/util-linux/util-linux/issues/484
-	out, err := exec.Command("losetup", "--detach", s.loopDevice).CombinedOutput()
+	if s.loopDevice == "" {
+		return
+	}
+	// Remove kpartx mappings.
+	out, err := exec.Command("kpartx", "-d", s.loopDevice).CombinedOutput()
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error cleaning up kpartx mappings for %s: %v: %s", s.loopDevice, err, string(out)))
+	}
+	out, err = exec.Command("losetup", "--detach", s.loopDevice).CombinedOutput()
 	if err != nil {
 		ui.Error(fmt.Sprintf("error while unmounting loop device %v: %s", err, string(out)))
 	}
