@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/hashicorp/go-getter v1.8.9
-	github.com/hashicorp/go-getter/v2 v2.2.3
+	github.com/hashicorp/go-getter/v2 v2.2.4
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/packer-plugin-sdk v0.6.11
 	github.com/mholt/archiver/v3 v3.5.1
