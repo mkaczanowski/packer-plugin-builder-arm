@@ -94,11 +94,21 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Update description
-        uses: peter-evans/dockerhub-description@v5
-        if: github.ref == 'refs/heads/master'
-        with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          short-description: Packer plugin to build ARM images
-          readme-filepath: ./README.md
+      # Disabled: fails with "Forbidden" on the PATCH to hub.docker.com.
+      # Debugged 2026-09-18: the 403 is returned by the Cloudflare WAF in
+      # front of the Docker Hub v2 API, not by Docker Hub itself
+      # (see https://github.com/peter-evans/dockerhub-description/issues/331).
+      # The exact same PATCH with the full README payload returns a clean
+      # 401 from Docker Hub auth when sent from a non-CI IP, so it is not
+      # the README content, the user-agent or the token - the block is
+      # tied to GitHub-hosted runner egress IPs, which the WAF scores
+      # poorly. No reliable content-based workaround; updating the Hub
+      # description manually instead.
+      # - name: Update description
+      #   uses: peter-evans/dockerhub-description@v5
+      #   if: github.ref == 'refs/heads/master'
+      #   with:
+      #     username: ${{ secrets.DOCKER_USER }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
+      #     short-description: Packer plugin to build ARM images
+      #     readme-filepath: ./README.md
