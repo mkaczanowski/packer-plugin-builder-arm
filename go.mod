@@ -3,7 +3,7 @@ module github.com/mkaczanowski/packer-plugin-builder-arm
 go 1.27.0
 
 require (
-	github.com/dustin/go-humanize v1.0.1
+	github.com/dustin/go-humanize v1.1.0
 	github.com/hashicorp/go-getter v1.8.9
 	github.com/hashicorp/go-getter/v2 v2.2.4
 	github.com/hashicorp/hcl/v2 v2.24.0
