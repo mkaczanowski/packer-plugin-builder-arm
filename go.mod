@@ -6,7 +6,7 @@ require (
 	github.com/dustin/go-humanize v1.1.0
 	github.com/hashicorp/go-getter v1.8.9
 	github.com/hashicorp/go-getter/v2 v2.2.4
-	github.com/hashicorp/hcl/v2 v2.24.0
+	github.com/hashicorp/hcl/v2 v2.25.0
 	github.com/hashicorp/packer-plugin-sdk v0.6.11
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/zclconf/go-cty v1.19.0
@@ -31,6 +31,7 @@ require (
 	github.com/andybalholm/brotli v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
+	github.com/apparentlymart/go-textseg/v17 v17.0.1 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/aws/aws-sdk-go v1.55.8 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.44.0 // indirect
