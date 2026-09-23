@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/mholt/archiver/v3"
 )
 
 // StepCompressArtifact generates rootfs archive if required
@@ -30,34 +29,6 @@ func (s *StepCompressArtifact) prepare(state multistep.StateBag) {
 
 	s.state = state
 	s.exclusions = exclusions
-}
-
-// isLocationExcluded checks if given location should be skipped for compression
-// NOTE: this is naive approach that supports only top level directory check
-func (s *StepCompressArtifact) isLocationExcluded(pth string) bool {
-	_, ok := s.exclusions[pth]
-	return ok
-}
-
-func (s *StepCompressArtifact) getSrcs() ([]string, error) {
-	imageMountpoint := s.state.Get(s.ImageMountPointKey).(string)
-	srcs := []string{}
-
-	files, err := os.ReadDir(imageMountpoint)
-	if err != nil {
-		return srcs, err
-	}
-
-	for _, file := range files {
-		loc := filepath.Join("/", file.Name())
-		if s.isLocationExcluded(loc) {
-			continue
-		}
-
-		srcs = append(srcs, loc)
-	}
-
-	return srcs, nil
 }
 
 // Run the step
@@ -83,42 +54,26 @@ func (s *StepCompressArtifact) Run(_ context.Context, state multistep.StateBag) 
 	}
 	defer os.RemoveAll(dir)
 
-	var archiveErr error
-	var dst string
-
-	if imageExt == ".gz" {
-		// create rootfs archive with tar
-		dst = filepath.Join(dir, imageBase)
-		cmd := []string{
-			"tar",
-			"-cpzf",
-			dst,
-		}
-
-		for pth := range s.exclusions {
-			cmd = append(cmd, fmt.Sprintf("--exclude=%s", filepath.Join(imageMountpoint, pth)))
-		}
-
-		cmd = append(cmd, "--one-file-system", "-C", imageMountpoint, ".")
-
-		ui.Message("creating rootfs archive")
-		_, archiveErr = exec.Command(cmd[0], cmd[1:]...).CombinedOutput()
-	} else {
-		// create rootfs archive with archiver
-		ui.Message("creating rootfs archive with archiver")
-		dst = filepath.Join(dir, imageBase)
-
-		srcs, err := s.getSrcs()
-		if err != nil {
-			ui.Error(fmt.Sprintf("error while filtering source files: %v", err))
-			return multistep.ActionHalt
-		}
-
-		archiveErr = archiver.Archive(srcs, dst)
+	// create rootfs archive; bsdtar picks the compression format based on
+	// the destination file extension
+	dst := filepath.Join(dir, imageBase)
+	cmd := []string{
+		"bsdtar",
+		"-cf",
+		dst,
 	}
 
+	for pth := range s.exclusions {
+		cmd = append(cmd, fmt.Sprintf("--exclude=.%s", pth))
+	}
+
+	cmd = append(cmd, "--one-file-system", "-C", imageMountpoint, ".")
+
+	ui.Message("creating rootfs archive")
+	out, archiveErr := exec.Command(cmd[0], cmd[1:]...).CombinedOutput()
+
 	if archiveErr != nil {
-		ui.Error(fmt.Sprintf("error while creating rootfs archive: %v", archiveErr))
+		ui.Error(fmt.Sprintf("error while creating rootfs archive: %v: %s", archiveErr, out))
 		return multistep.ActionHalt
 	}
 

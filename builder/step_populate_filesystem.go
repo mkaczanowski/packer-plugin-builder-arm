@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/mholt/archiver/v3"
 )
 
 // StepPopulateFilesystem unpacks system files from previously downloaded archive onto mounted partitions
@@ -47,7 +46,8 @@ func (s *StepPopulateFilesystem) Run(_ context.Context, state multistep.StateBag
 		ui.Message(fmt.Sprintf("unpacking with custom command: %s", cmd))
 		out, err = exec.Command(cmd[0], cmd[1:]...).CombinedOutput()
 	} else {
-		out, err = []byte("N/A"), archiver.Unarchive(rootfsArchive, imageMountpoint)
+		ui.Message(fmt.Sprintf("unpacking with bsdtar: %s", rootfsArchive))
+		out, err = exec.Command("bsdtar", "-xf", rootfsArchive, "-C", imageMountpoint).CombinedOutput()
 	}
 
 	if err != nil {

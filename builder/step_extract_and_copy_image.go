@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/mholt/archiver/v3"
 )
 
 // StepExtractAndCopyImage creates filesystem on already partitioned image
@@ -66,7 +65,8 @@ func (s *StepExtractAndCopyImage) Run(_ context.Context, state multistep.StateBa
 			ui.Message(fmt.Sprintf("unpacking with custom command: %s", cmd))
 			out, err = exec.Command(cmd[0], cmd[1:]...).CombinedOutput()
 		} else {
-			out, err = []byte("N/A"), archiver.Unarchive(archivePath, dir)
+			ui.Message(fmt.Sprintf("unpacking with bsdtar: %s", archivePath))
+			out, err = exec.Command("bsdtar", "-xf", archivePath, "-C", dir).CombinedOutput()
 		}
 
 		if err != nil {
