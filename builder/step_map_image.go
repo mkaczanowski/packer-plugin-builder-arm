@@ -27,20 +27,22 @@ func (s *StepMapImage) Run(_ context.Context, state multistep.StateBag) multiste
 
 	out, err := exec.Command("losetup", "--find", "--partscan", "--show", image).CombinedOutput()
 	if err != nil {
-		ui.Error(fmt.Sprintf("Error running losetup: %v: %s", err, string(out)))
+		ui.Error(fmt.Sprintf("error running losetup: %v: %s", err, string(out)))
 		return multistep.ActionHalt
 	}
 	s.loopDevice = strings.TrimSpace(string(out))
 
+	// kpartx maps partitions to /dev/mapper/loopXpN devices that exist even
+	// without the host /dev bind-mounted into a container.
 	out, err = exec.Command("kpartx", "-av", s.loopDevice).CombinedOutput()
 	if err != nil {
-		ui.Error(fmt.Sprintf("Error running kpartx: %v: %s", err, string(out)))
+		ui.Error(fmt.Sprintf("error running kpartx: %v: %s", err, string(out)))
 		return multistep.ActionHalt
 	}
-	s.loopDevice = "/dev/mapper/" + strings.TrimPrefix(s.loopDevice, "/dev/")
+	mapperDevice := "/dev/mapper/" + strings.TrimPrefix(s.loopDevice, "/dev/")
 
-	state.Put(s.ResultKey, s.loopDevice)
-	ui.Message(fmt.Sprintf("Image %s mapped to %s", image, s.loopDevice))
+	state.Put(s.ResultKey, mapperDevice)
+	ui.Message(fmt.Sprintf("image %s mapped to %s", image, mapperDevice))
 
 	return multistep.ActionContinue
 }
@@ -54,10 +56,10 @@ func (s *StepMapImage) Cleanup(state multistep.StateBag) {
 	if s.loopDevice == "" {
 		return
 	}
-	// Remove kpartx mappings.
+	// Remove the kpartx partition mappings before detaching the loop device.
 	out, err := exec.Command("kpartx", "-d", s.loopDevice).CombinedOutput()
 	if err != nil {
-		ui.Error(fmt.Sprintf("Error cleaning up kpartx mappings for %s: %v: %s", s.loopDevice, err, string(out)))
+		ui.Error(fmt.Sprintf("error removing kpartx mappings for %s: %v: %s", s.loopDevice, err, string(out)))
 	}
 	out, err = exec.Command("losetup", "--detach", s.loopDevice).CombinedOutput()
 	if err != nil {
