@@ -11,6 +11,9 @@ on:
     # once a week
     - cron:  '0 0 * * 1'
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -59,7 +62,7 @@ jobs:
       - name: Install packer plugins
         if: github.event_name == 'pull_request'
         run: |
-          docker run --rm --privileged -v ${PWD}:/build packer-plugin-builder-arm:test init boards/raspberry-pi-4/archlinuxarm.pkr.hcl
+          docker run --rm --privileged -e PACKER_GITHUB_API_TOKEN=${{ secrets.GITHUB_TOKEN }} -v ${PWD}:/build packer-plugin-builder-arm:test init boards/raspberry-pi-4/archlinuxarm.pkr.hcl
 
       - name: Test build board
         if: github.event_name == 'pull_request'

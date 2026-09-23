@@ -1,17 +1,20 @@
-# Source for qemu-user-static >7.0
-FROM public.ecr.aws/ubuntu/ubuntu:noble as qemu_binaries
+# Source for static qemu-user binaries >7.0. Ubuntu resolute merged
+# qemu-user-static into qemu-user; the binaries are statically linked but
+# now named qemu-<arch>, so copy them under the -static names that
+# entrypoint.sh registers with binfmt_misc.
+FROM public.ecr.aws/ubuntu/ubuntu:resolute AS qemu_binaries
 
 # hadolint ignore=DL3008
 RUN apt-get update -qq \
- && apt-get install -qqy --no-install-recommends qemu-user-static
+ && apt-get install -qqy --no-install-recommends qemu-user
 
 RUN mkdir -p /binaries && \
     if [ "$(uname -m)" = "aarch64" ]; then \
-        cp /usr/bin/qemu-arm-static /binaries/; \
-        cp /usr/bin/qemu-x86_64-static /binaries/; \
+        cp /usr/bin/qemu-arm /binaries/qemu-arm-static; \
+        cp /usr/bin/qemu-x86_64 /binaries/qemu-x86_64-static; \
     else \
-        cp /usr/bin/qemu-aarch64-static /binaries/; \
-        cp /usr/bin/qemu-arm-static /binaries/; \
+        cp /usr/bin/qemu-aarch64 /binaries/qemu-aarch64-static; \
+        cp /usr/bin/qemu-arm /binaries/qemu-arm-static; \
     fi
 
 FROM golang:1.27-trixie AS builder
@@ -43,7 +46,7 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then PACKER_ARCH="arm64"; else PACKER_ARCH
 # COMPRESS WITH UPX
 RUN upx-ucl --lzma /build/packer-plugin-builder-arm /bin/packer
 
-FROM public.ecr.aws/lts/ubuntu:noble
+FROM public.ecr.aws/lts/ubuntu:resolute
 
 # hadolint ignore=DL3008
 RUN apt-get update -qq \

@@ -172,6 +172,13 @@ Anything qemu related:
 "qemu_binary_destination_path": "/usr/bin/qemu-arm-static"
 ```
 
+Note: Ubuntu 26.04 (resolute) merged `qemu-user-static` into `qemu-user` and
+renamed the binaries to `qemu-<arch>` (e.g. `/usr/bin/qemu-arm`). On such
+hosts install `qemu-user` and point `qemu_binary_source_path` at the new
+name. `qemu_binary_destination_path` can stay as is — it only names the file
+inside the image and must match the binfmt registration, which still uses the
+`-static` names.
+
 The arm instruction set (default=`armv7l` for qemu-arm-static) to be emulated can be defined via the `QEMU_CPU` variable. To switch to `armv6l` (check with `uname -m` as a provisioner command) run packer e.g. via:
 * `QEMU_CPU=arm1176 packer build ...`
 * `docker run -e QEMU_CPU=arm1176 ...`
