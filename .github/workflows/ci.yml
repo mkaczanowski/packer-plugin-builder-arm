@@ -99,7 +99,7 @@ jobs:
       - name: Install Packer
         uses: hashicorp-contrib/setup-packer@v4
         with:
-          packer-version: 1.15.4
+          packer-version: 1.16.1
 
       - name: Retrieve cache
         uses: actions/cache@v6
