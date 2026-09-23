@@ -164,6 +164,17 @@ The base image description (size, partitions, mountpoints etc).
 
 The plugin doesn't try to detect the image partitions because that varies a lot. Instead it solely depends on the `image_partitions` specification, so you should set that even if you reuse the image (`image_build_method` = `reuse`).
 
+### Filesystem labels and UUIDs
+In `new` mode, `filesystem_make_options` passes flags to `mkfs`. For FAT, use
+`filesystem = "fat"` with `filesystem_make_options = ["-n", "BOOT"]`. For
+ext4, `filesystem_make_options = ["-L", "ROOT", "-U", "<unique-uuid>"]` sets
+both values. See the `mkfs.vfat`/`mke2fs` man pages for other flags.
+
+`reuse` and `resize` preserve existing identifiers. Filesystem UUIDs are not
+partition-table `PARTUUID`s; change the DOS/MBR disk ID with
+`sfdisk --disk-id`, or a GPT partition GUID with
+`sfdisk --part-uuid`/`sgdisk --partition-guid`.
+
 ## Qemu config
 Anything qemu related:
 
@@ -174,10 +185,10 @@ Anything qemu related:
 
 Note: Ubuntu 26.04 (resolute) merged `qemu-user-static` into `qemu-user` and
 renamed the binaries to `qemu-<arch>` (e.g. `/usr/bin/qemu-arm`). On such
-hosts install `qemu-user` and point `qemu_binary_source_path` at the new
-name. `qemu_binary_destination_path` can stay as is — it only names the file
-inside the image and must match the binfmt registration, which still uses the
-`-static` names.
+hosts install `qemu-user` and `qemu-user-binfmt`, then point
+`qemu_binary_source_path` at the new name. `qemu_binary_destination_path` can
+stay as is; it only names the file inside the image and must match the binfmt
+registration, which still uses the `-static` names.
 
 The arm instruction set (default=`armv7l` for qemu-arm-static) to be emulated can be defined via the `QEMU_CPU` variable. To switch to `armv6l` (check with `uname -m` as a provisioner command) run packer e.g. via:
 * `QEMU_CPU=arm1176 packer build ...`
@@ -250,6 +261,28 @@ provisioner "shell" {
 ```
 
 Skip the restore step if the image should keep working DNS settings.
+
+## System services inside the chroot
+The chroot has no target systemd, D-Bus, or NetworkManager daemon. Commands that
+need them, including the Ansible `nmcli` module, fail.
+
+NetworkManager 1.42 and newer can create a keyfile offline:
+
+```bash
+umask 077
+nmcli --offline connection add type wifi con-name my-wifi ssid my-ssid \
+  wifi-sec.key-mgmt wpa-psk wifi-sec.psk my-password \
+  > /etc/NetworkManager/system-connections/my-wifi.nmconnection
+```
+
+For older versions, write a root-owned `0600` keyfile directly; include
+`security=802-11-wireless-security` under `[wifi]` and credentials under
+`[wifi-security]`. Runtime commands such as `systemctl start`, `hostnamectl`,
+and `timedatectl` still need their daemons. `systemctl enable UNIT` works in a
+chroot; it is safer than hand-written links because it applies every
+`[Install]` directive. From the host, use
+`systemctl --root=/tmp/<mountpoint> enable UNIT`.
+
 This plugin doesn't resize partitions on the base image. However, you can easily expand partition size at the boot time with a systemd service. [Here](./boards/raspberry-pi/archlinuxarm.json) you can find real-life example, where a raspberry pi root-fs partition expands to all available space on sdcard.
 
 # Flashing
@@ -303,6 +336,14 @@ To resize a partition you need to set `image_build_method` to `resize` mode and 
 Complete example:
 
 - [`boards/raspberry-pi/raspbian-resize.json`](./boards/raspberry-pi/raspbian-resize.json)
+
+Notes:
+* Resize only expands. Set the top-level `image_size` larger than the base
+  image; shrinking requires building a new image.
+* Exactly one `ext2`, `ext3`, or `ext4` partition must have `size` set to `0`.
+  Otherwise the builder cannot select the partition to expand.
+* For "No space left on device", check `df -h` and `df -i`. Increase
+  `image_size` only when the selected filesystem is out of blocks.
 
 ## Export as Docker image
 With the `artifice` plugin you can pass a rootfs archive to docker post-processors
@@ -358,6 +399,52 @@ vagrant up
 vagrant provision
 ```
 > Note: For this the disksize plugin is needed if not already installed `vagrant plugin install vagrant-disksize`
+
+## Debugging builds
+Enable verbose logging with:
+```bash
+PACKER_LOG=1 packer build ...
+```
+
+This builder does not pause for `packer build -debug`. Add a breakpoint before
+the suspect provisioner instead:
+
+```hcl
+provisioner "breakpoint" {
+  note = "Inspect the mounted image, then press Enter to continue"
+}
+```
+
+While paused, find the root mountpoint in the log and inspect it from another
+terminal:
+
+```bash
+sudo chroot /tmp/<mountpoint> /bin/bash
+```
+
+Run the suspect commands there.
+
+## "Failed to find binfmt_misc for qemu-arm under /proc/sys/fs/binfmt_misc"
+The plugin needs the qemu user-mode emulators registered with the kernel's
+`binfmt_misc` mechanism on the host. Install both QEMU and its registration
+package where available:
+
+* Older Debian/Ubuntu:
+  `sudo apt install qemu-user-static binfmt-support`
+* Ubuntu 26.04 and other releases with unsuffixed binaries:
+  `sudo apt install qemu-user qemu-user-binfmt`
+* Arch Linux: install `qemu-user-static` **and** `qemu-user-static-binfmt`
+* Fedora: `sudo dnf install qemu-user-static qemu-user-binfmt`, then run
+  `sudo systemctl restart systemd-binfmt.service`
+* RHEL/Rocky 8: the official repositories do not provide those QEMU user-mode
+  packages. Use another trusted source, register QEMU manually, or use this
+  project's container.
+
+This project's privileged container registers its bundled interpreters, so it
+needs no separate host setup. Check a registration with
+`cat /proc/sys/fs/binfmt_misc/qemu-arm`. `qemu_binary_source_path` must resolve
+to its interpreter file, such as `/usr/bin/qemu-arm-static` or
+`/usr/bin/qemu-arm`; symlinks work.
 
 # Demo
 [![asciicast](https://asciinema.org/a/7ad1nm2Q7DRFVlHpqAknPolNo.svg)](https://asciinema.org/a/7ad1nm2Q7DRFVlHpqAknPolNo)
