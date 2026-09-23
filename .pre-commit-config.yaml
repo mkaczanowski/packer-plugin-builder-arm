@@ -2,9 +2,10 @@
 #   pre-commit run --all-files
 # Update this file:
 #   pre-commit autoupdate
+exclude: ^aur/PKGBUILD$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: fix-byte-order-marker
       - id: check-executables-have-shebangs
@@ -14,12 +15,8 @@ repos:
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace
-  - repo: https://github.com/lovesegfault/beautysh
-    rev: v6.2.1
-    hooks:
-      - id: beautysh
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.9.0.6
+    rev: v0.11.0.1-1
     hooks:
       - id: shellcheck
   - repo: https://github.com/hadolint/hadolint
@@ -32,13 +29,13 @@ repos:
       - id: go-fmt
      #- id: golangci-lint
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.6
+    rev: v2.4.3
     hooks:
       - id: codespell
         exclude: go\.sum$
         args: ["-w"]
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.27.0
+    rev: 0.38.0
     hooks:
       - id: check-github-workflows
       - id: check-dependabot

@@ -4,6 +4,10 @@ packer {
       version = ">=v0.3.2"
       source  = "github.com/ethanmdavidson/git"
     }
+    arm = {
+      version = ">= 1.0.9"
+      source  = "github.com/mkaczanowski/arm"
+    }
   }
 }
 
@@ -31,7 +35,7 @@ source "arm" "arch" {
     type         = "83"
   }
   image_path                   = "raspberry-pi-4.img"
-  image_size                   = "2G"
+  image_size                   = "4G"
   image_type                   = "dos"
   qemu_binary_destination_path = "/usr/bin/qemu-aarch64-static"
   qemu_binary_source_path      = "/usr/bin/qemu-aarch64-static"
@@ -46,8 +50,8 @@ build {
       "echo 'nameserver 8.8.8.8' > /etc/resolv.conf",
       "pacman-key --init",
       "pacman-key --populate archlinuxarm",
-      "pacman -Sy --noconfirm --needed",
-      "pacman -S parted --noconfirm --needed"
+      "pacman -Sy --disable-sandbox --noconfirm --needed",
+      "pacman -S --disable-sandbox parted --noconfirm --needed"
     ]
   }
 

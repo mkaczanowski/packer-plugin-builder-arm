@@ -13,23 +13,23 @@ jobs:
     # brew install pre-commit shellcheck && pre-commit run -a
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.1
-      - uses: actions/setup-go@v5.0.0
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
         with:
-          go-version: '1.21'
-      - uses: actions/setup-python@v5
-      - uses: pre-commit/action@v3.0.0
+          go-version-file: go.mod
+      - uses: actions/setup-python@v7
+      - uses: pre-commit/action@v3.0.1
   golangci:
     # install and run locally via e.g.:
     # brew install golangci-lint && golangci-lint run
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.1
-      - uses: actions/setup-go@v5.0.0
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
         with:
-          go-version: '1.21'
+          go-version-file: go.mod
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v9.3.0
         with:
-          version: v1.55.2
+          version: v2.13.2
           args: --timeout=3m

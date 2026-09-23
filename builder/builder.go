@@ -8,15 +8,14 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	cfg "github.com/mkaczanowski/packer-builder-arm/config"
+	cfg "github.com/mkaczanowski/packer-plugin-builder-arm/config"
 )
 
 // Config top-level holder for more specific configurations used
-// while building packer-builder-arm
+// while building packer-plugin-builder-arm
 type Config struct {
 	cfg.RemoteFileConfig `mapstructure:",squash"`
 	cfg.ImageConfig      `mapstructure:",squash"`
@@ -107,13 +106,14 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	}
 
 	steps := []multistep.Step{
-		&commonsteps.StepDownload{
+		&StepDownload{
 			Checksum:    b.config.FileChecksum,
 			Description: "rootfs_archive",
 			ResultKey:   "rootfs_archive_path",
 			Url:         b.config.FileUrls,
 			Extension:   b.config.TargetExtension,
 			TargetPath:  b.config.TargetPath,
+			UserAgent:   b.config.FileUserAgent,
 		},
 	}
 

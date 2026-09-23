@@ -2,7 +2,7 @@ package builder
 
 import "os"
 
-// Artifact represents the image produced by packer-builder-arm
+// Artifact represents the image produced by packer-plugin-builder-arm
 type Artifact struct {
 	image string
 }

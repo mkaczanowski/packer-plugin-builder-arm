@@ -1,0 +1,35 @@
+---
+description: |
+  The arm builder builds or extends ARM system images. It can create a new
+  image from a rootfs archive, reuse an existing image, or resize an
+  existing image's partition.
+page_title: Arm - Builders
+nav_title: Arm
+---
+
+# Arm Builder
+
+Type: `arm`
+
+The `arm` builder builds (or extends) ARM system images. It operates in three modes:
+
+- `new` - creates an empty disk image and populates the rootfs on it
+- `reuse` - uses an already existing image as the base
+- `resize` - uses an already existing image but resizes a given partition (e.g. root)
+
+The build mimics a standard image creation process:
+
+- building a base empty image (`dd`)
+- partitioning (`sgdisk` / `sfdisk`)
+- filesystem creation (`mkfs.type`)
+- partition mapping (`losetup`)
+- filesystem mount (`mount`)
+- populating the rootfs (`tar`/`unzip`/`xz` etc.)
+- setting up qemu + chroot
+- customizing the installation within the chroot
+
+The virtualization works via the [binfmt_misc](https://en.wikipedia.org/wiki/Binfmt_misc)
+kernel feature and qemu.
+
+See the project [README](https://github.com/mkaczanowski/packer-plugin-builder-arm)
+for the full configuration reference and board examples.

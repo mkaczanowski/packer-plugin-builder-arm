@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -24,6 +25,7 @@ type RemoteFileConfig struct {
 	FileChecksumType string   `mapstructure:"file_checksum_type"`
 	FileUrls         []string `mapstructure:"file_urls"`
 	FileUnarchiveCmd []string `mapstructure:"file_unarchive_cmd"`
+	FileUserAgent    string   `mapstructure:"file_user_agent"`
 	TargetPath       string   `mapstructure:"file_target_path"`
 	TargetExtension  string   `mapstructure:"file_target_extension"`
 	TmpDirLocation   string   `mapstructure:"file_tmp_dir_location"`
@@ -96,12 +98,21 @@ func (c *RemoteFileConfig) Prepare(_ *interpolate.Context) (warnings []string, e
 			log.Printf("get working directory: %v", err)
 		}
 
+		httpGetter := &getter.HttpGetter{Netrc: true}
+		if c.FileUserAgent != "" {
+			httpGetter.Header = http.Header{"User-Agent": []string{c.FileUserAgent}}
+		}
+
 		gc := getter.Client{
-			Dst:     "no-op",
-			Src:     u.String(),
-			Pwd:     wd,
-			Dir:     false,
-			Getters: getter.Getters,
+			Dst: "no-op",
+			Src: u.String(),
+			Pwd: wd,
+			Dir: false,
+			Getters: map[string]getter.Getter{
+				"file":  new(getter.FileGetter),
+				"http":  httpGetter,
+				"https": httpGetter,
+			},
 		}
 
 		cksum, err := gc.ChecksumFromFile(c.FileChecksumURL, u)

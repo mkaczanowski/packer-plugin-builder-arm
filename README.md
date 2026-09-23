@@ -1,25 +1,22 @@
-# Packer builder ARM
+# Packer Plugin Builder ARM
 
 [![Build Status][github-badge]][github]
 [![GoDoc][godoc-badge]][godoc]
-[![GoReportCard][report-badge]][report]
 [![Docker Pulls][docker-pulls]][docker-hub]
 [![Docker Image Size][docker-size]][docker-hub]
 [![Docker Image Version][docker-version]][docker-hub]
 
-[github-badge]:https://img.shields.io/github/actions/workflow/status/mkaczanowski/packer-builder-arm/docker.yml?branch=master
-[github]: https://github.com/mkaczanowski/packer-builder-arm/actions
-[godoc-badge]: https://godoc.org/github.com/mkaczanowski/packer-builder-arm?status.svg
-[godoc]: https://godoc.org/github.com/mkaczanowski/packer-builder-arm
-[report-badge]: https://goreportcard.com/badge/github.com/mkaczanowski/packer-builder-arm
-[report]: https://goreportcard.com/report/github.com/mkaczanowski/packer-builder-arm
-[docker-hub]: https://hub.docker.com/r/mkaczanowski/packer-builder-arm
-[docker-pulls]: https://img.shields.io/docker/pulls/mkaczanowski/packer-builder-arm
-[docker-size]: https://img.shields.io/docker/image-size/mkaczanowski/packer-builder-arm
-[docker-version]: https://img.shields.io/docker/v/mkaczanowski/packer-builder-arm?sort=semver
+[github-badge]:https://img.shields.io/github/actions/workflow/status/mkaczanowski/packer-plugin-builder-arm/docker.yml?branch=master
+[github]: https://github.com/mkaczanowski/packer-plugin-builder-arm/actions
+[godoc-badge]: https://godoc.org/github.com/mkaczanowski/packer-plugin-builder-arm?status.svg
+[godoc]: https://godoc.org/github.com/mkaczanowski/packer-plugin-builder-arm
+[docker-hub]: https://hub.docker.com/r/mkaczanowski/packer-plugin-builder-arm
+[docker-pulls]: https://img.shields.io/docker/pulls/mkaczanowski/packer-plugin-builder-arm
+[docker-size]: https://img.shields.io/docker/image-size/mkaczanowski/packer-plugin-builder-arm
+[docker-version]: https://img.shields.io/docker/v/mkaczanowski/packer-plugin-builder-arm?sort=semver
 
 
-This plugin allows you to build or extend ARM system image. It operates in two modes:
+This plugin allows you to build or extend ARM system images. It operates in three modes:
 * new - creates empty disk image and populates the rootfs on it
 * reuse - uses already existing image as the base
 * resize - uses already existing image but resize given partition (ie. root)
@@ -38,60 +35,78 @@ The virtualization works via [binfmt_misc](https://en.wikipedia.org/wiki/Binfmt_
 
 Since the setup varies a lot for different hardware types, the example configuration is available per "board". Currently the following boards are supported (feel free to add more):
 * bananapi-r1 (Archlinux ARM)
-* beaglebone-black (Archlinux ARM, Debian)
+* beaglebone-black (Angstrom, Archlinux ARM, Debian)
 * jetson-nano (Ubuntu)
 * odroid-u3 (Archlinux ARM)
 * odroid-xu4 (Archlinux ARM, Ubuntu)
-* parallella (Ubuntu)
-* raspberry-pi (Archlinux ARM, Raspbian)
-* raspberry-pi-3 (Archlinux ARM (armv8))
-* raspberry-pi-4 (Archlinux ARM (armv7), Ubuntu 20.04 LTS))
+* parallella (Archlinux ARM, Ubuntu)
+* raspberry-pi (Archlinux ARM, Raspbian, Raspberry Pi OS Lite)
+* raspberry-pi-3 (Archlinux ARM (armv8), Raspberry Pi OS Lite (arm64))
+* raspberry-pi-4 (Archlinux ARM (armv8), Ubuntu 20.04 LTS)
+* rock-4b (Debian, via Radxa debos image)
 * wandboard (Archlinux ARM)
 * armv7 generic (Alpine, Archlinux ARM)
+* armv8 generic (Archlinux ARM)
 
 # Quick start
-```
-git clone https://github.com/mkaczanowski/packer-builder-arm
-cd packer-builder-arm
+```bash
+git clone https://github.com/mkaczanowski/packer-plugin-builder-arm
+cd packer-plugin-builder-arm
 go mod download
-go build
+go build -o packer-plugin-builder-arm
 
-sudo packer build boards/odroid-u3/archlinuxarm.json
+# register the locally-built plugin with packer (one-time, or whenever you rebuild)
+packer plugins install --path ./packer-plugin-builder-arm github.com/mkaczanowski/arm
+
+sudo -E packer build boards/odroid-u3/archlinuxarm.json
 ```
+
+Since this is a multi-component plugin, HCL2 templates should declare it in a `required_plugins` block so `packer init` knows what version is expected:
+```hcl
+packer {
+  required_plugins {
+    arm = {
+      source  = "github.com/mkaczanowski/arm"
+      version = ">= 1.0.9"
+    }
+  }
+}
+```
+Legacy JSON templates (`"type": "arm"` builders) don't support `required_plugins`, but work the same way once the plugin has been installed with `packer plugins install`.
 ## Run in Docker
-This method is primarily for macOS users where is no native way to use qemu-user-static, loop mount Linux specific filesystems and install all above mentioned Linux specific tools (or Linux users, who do not want to setup packer and all the tools).
+This method is primarily for macOS users, where there is no native way to use qemu-user-static, loop mount Linux specific filesystems and install all above mentioned Linux specific tools (or for Linux users, who do not want to set up packer and all the tools).
 
 The container is a multi-arch container (linux/amd64 or linux/arm64), that can be used on Intel (x86_64) or Apple M1 (arm64) Macs and also on Linux machines running linux (x86_64 or aarch64) kernels.
 
-> **_NOTE:_** On Macs: Don't run `go build .` (that produces a **darwin** binary) and then run below `docker run ...` commands from the same folder to avoid the error `error initializing builder 'arm': fork/exec /build/packer-builder-arm: exec
-format error` (**linux** packer process within docker fails to load the outside container compiled packer-builder-arm binary due to being a **darwin** binary). Delete any local binary via `rm -r packer-*` to solely use the binary already included and provided by the container.
+> **_NOTE:_** On Macs: Don't run `go build .` (that produces a **darwin** binary) and then run below `docker run ...` commands from the same folder to avoid the error `error initializing builder 'arm': fork/exec /build/packer-plugin-builder-arm: exec
+format error` (**linux** packer process within docker fails to load the outside container compiled packer-plugin-builder-arm binary due to being a **darwin** binary). Delete any local binary via `rm -r packer-*` to solely use the binary already included and provided by the container.
 
 ### Usage via container from Docker Hub:
 
 Pull the latest version of the container to ensure the next commands are not using an old cached version of the container :
-```
-docker pull mkaczanowski/packer-builder-arm:latest
+```bash
+docker pull mkaczanowski/packer-plugin-builder-arm:latest
 ```
 
 Build a board:
-```
-docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build mkaczanowski/packer-builder-arm:latest build boards/raspberry-pi/raspbian.json
+```bash
+docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build mkaczanowski/packer-plugin-builder-arm:latest build boards/raspberry-pi/raspbian.json
 ```
 Build a board with more system packages (e.g. bmap-tools, zstd) can be added via the parameter `-extra-system-packages=...`:
-```
-docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build mkaczanowski/packer-builder-arm:latest build boards/raspberry-pi/raspbian.json -extra-system-packages=bmap-tools,zstd
+```bash
+docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build mkaczanowski/packer-plugin-builder-arm:latest build boards/raspberry-pi/raspbian.json -extra-system-packages=bmap-tools,zstd
 ```
 
 > **_NOTE:_** In above commands **latest** can also be replaced via e.g. **1.0.3** to get a specific container version.
 
 ### Usage via local container build (supports amd64/aarch64 hosts):
 Build the container locally:
-```
-docker build -t packer-builder-arm -f docker/Dockerfile .
+```bash
+docker build -t packer-plugin-builder-arm -f docker/Dockerfile .
 ```
 Run packer via the local built container:
-```
-docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build packer-builder-arm build boards/raspberry-pi/raspbian.json
+```bash
+docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build packer-plugin-builder-arm build boards/raspberry-pi/raspbian.json
 ```
 
 # Dependencies
@@ -110,7 +125,7 @@ Configuration is split into 3 parts:
 ## Remote file
 Describes the remote file that is going to be used as base image or rootfs archive (depending on `image_build_method`)
 
-```
+```json
 "file_urls" : ["http://os.archlinuxarm.org/os/ArchLinuxARM-odroid-xu3-latest.tar.gz"],
 "file_checksum_url": "http://hu.mirror.archlinuxarm.org/os/ArchLinuxARM-odroid-xu3-latest.tar.gz.md5",
 "file_checksum_type": "md5",
@@ -124,10 +139,12 @@ The `file_unarchive_cmd` is optional and should be used if the standard golang a
 
 Raw images format (`.img` or `.iso`) can be used by defining the `file_target_extension` appropriately.
 
+Some mirrors reject requests carrying the default HTTP client User-Agent. In that case, set `file_user_agent` to override it, e.g. `"file_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0"`.
+
 ## Image config
 The base image description (size, partitions, mountpoints etc).
 
-```
+```json
 "image_build_method": "new",
 "image_path": "odroid-xu4.img",
 "image_size": "2G",
@@ -144,23 +161,23 @@ The base image description (size, partitions, mountpoints etc).
 ],
 ```
 
-The plugin doesn't try to detect the image partitions because that varies a lot. Instead it solely depend on `image_partitions` specification, so you should set that even if you reuse the image (`method` = reuse).
+The plugin doesn't try to detect the image partitions because that varies a lot. Instead it solely depends on the `image_partitions` specification, so you should set that even if you reuse the image (`image_build_method` = `reuse`).
 
 ## Qemu config
 Anything qemu related:
 
-```
+```json
 "qemu_binary_source_path": "/usr/bin/qemu-arm-static",
 "qemu_binary_destination_path": "/usr/bin/qemu-arm-static"
 ```
 
-The arm instruction set (default=`armv7l` for qemu-arm-static) to be emulated can be defined via the `QEMU_CPU` variable. To switch to `armv6l` (check with `uname -m` as provission command) run packer e.g. via:
+The arm instruction set (default=`armv7l` for qemu-arm-static) to be emulated can be defined via the `QEMU_CPU` variable. To switch to `armv6l` (check with `uname -m` as a provisioner command) run packer e.g. via:
 * `QEMU_CPU=arm1176 packer build ...`
 * `docker run -e QEMU_CPU=arm1176 ...`
 
 # Chroot provisioner
 To execute command within chroot environment you should use chroot communicator:
-```
+```json
 "provisioners": [
  {
    "type": "shell",
@@ -175,7 +192,7 @@ This plugin doesn't resize partitions on the base image. However, you can easily
 
 # Flashing
 To dump image on device you can use [custom postprocessor](https://github.com/mkaczanowski/packer-post-processor-flasher) (really wrapper around `dd` with some sanity checks):
-```
+```json
 "post-processors": [
  {
      "type": "flasher",
@@ -191,7 +208,7 @@ To dump image on device you can use [custom postprocessor](https://github.com/mk
 While image (`.img`) format is useful for most cases, you might want to use
 rootfs for other purposes (ex. export to docker). This is how you can generate
 rootfs archive instead of image:
-```
+```json
 "image_path": "odroid-xu4.img" # generates image
 "image_path": "odroid-xu4.img.tar.gz" # generates rootfs archive
 ```
@@ -200,7 +217,7 @@ rootfs archive instead of image:
 Currently resizing is only limited to expanding single `ext{2,3,4}` partition with `resize2fs`. This is often requested feature where already built image is given and we need to expand the main partition to accommodate changes made in provisioner step (ie. installing packages).
 
 To resize a partition you need to set `image_build_method` to `resize` mode and set selected partition size to `0`, for example:
-```
+```json
 "builders": [
   {
     "type": "arm",
@@ -221,14 +238,13 @@ To resize a partition you need to set `image_build_method` to `resize` mode and 
 ]
 ```
 
-Complete examples:
+Complete example:
 
 - [`boards/raspberry-pi/raspbian-resize.json`](./boards/raspberry-pi/raspbian-resize.json)
-- [`boards/beaglebone-black/ubuntu.pkr.hcl`](./boards/beaglebone-black/ubuntu.pkr.hcl)
 
-## Docker
-With `artifice` plugin you can pass rootfs archive to docker plugins
-```
+## Export as Docker image
+With the `artifice` plugin you can pass a rootfs archive to docker post-processors
+```json
 "post-processors": [
     [{
         "type": "artifice",
@@ -245,7 +261,7 @@ With `artifice` plugin you can pass rootfs archive to docker plugins
 
 ## CI/CD
 This is the live example on how to use github actions to push image to docker image registry:
-```
+```bash
 cat .github/workflows/archlinuxarm-armv7-docker.yml
 ```
 
@@ -254,14 +270,14 @@ https://github.com/hashicorp/packer/pull/8462
 
 # Examples
 For more examples please see:
-```
+```bash
 tree boards/
 ```
 
 The repository also includes some arm typical scripts to e.g. resize partitions on first boot or more extensive
 provision scripts:
 
-```
+```bash
 tree scripts/
 ```
 
@@ -274,8 +290,8 @@ problems, the first question you should ask yourself is:
 
 To answer that question, I'd recommend reproducing the error on the VM, for
 instance:
-```
-cd packer-builder-arm
+```bash
+cd packer-plugin-builder-arm
 vagrant up
 vagrant provision
 ```

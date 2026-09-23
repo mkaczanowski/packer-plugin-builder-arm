@@ -20,26 +20,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v7.0.1
 
       - name: Set up QEMU
         # Required only for the multi-arch container builds that are pushed to Dockerhub.
         # Setting up QEMU during normal PRs prevents testing of the container included
         # QEMU setup.
         if: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags') }}
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         with:
           platforms: linux/amd64,linux/arm64
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
-            mkaczanowski/packer-builder-arm
+            mkaczanowski/packer-plugin-builder-arm
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -48,43 +48,43 @@ jobs:
       #### build+export, test only on PRs
       - name: Build and export to Docker
         if: github.event_name == 'pull_request'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/Dockerfile
           load: true
-          tags: packer-builder-arm:test
+          tags: packer-plugin-builder-arm:test
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Install packer plugins
         if: github.event_name == 'pull_request'
         run: |
-          docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build packer-builder-arm:test init boards/raspberry-pi-4/archlinuxarm.pkr.hcl
+          docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build packer-plugin-builder-arm:test init boards/raspberry-pi-4/archlinuxarm.pkr.hcl
 
       - name: Test build board
         if: github.event_name == 'pull_request'
         run: |
-          docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build packer-builder-arm:test build boards/raspberry-pi-4/archlinuxarm.pkr.hcl -extra-system-packages=bmap-tools,zstd
+          docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build packer-plugin-builder-arm:test build boards/raspberry-pi-4/archlinuxarm.pkr.hcl -extra-system-packages=bmap-tools,zstd
           du -h raspberry-pi-4.img
           du -h --apparent-size raspberry-pi-4.img
       ####
 
       - name: Login to DockerHub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags')
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       # - name: Login to GitHub Container Registry
-      #   uses: docker/login-action@v3
+      #   uses: docker/login-action@v4
       #   with:
       #     registry: ghcr.io
       #     username: ${{ github.repository_owner }}
       #     password: ${{ secrets.GHCR_IO_REGISTRY_TOKEN }}
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         if: ${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags') }}
         with:
           context: .
@@ -94,11 +94,21 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Update description
-        uses: peter-evans/dockerhub-description@v4
-        if: github.ref == 'refs/heads/master'
-        with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          short-description: Packer plugin to build ARM images
-          readme-filepath: ./README.md
+      # Disabled: fails with "Forbidden" on the PATCH to hub.docker.com.
+      # Debugged 2026-09-18: the 403 is returned by the Cloudflare WAF in
+      # front of the Docker Hub v2 API, not by Docker Hub itself
+      # (see https://github.com/peter-evans/dockerhub-description/issues/331).
+      # The exact same PATCH with the full README payload returns a clean
+      # 401 from Docker Hub auth when sent from a non-CI IP, so it is not
+      # the README content, the user-agent or the token - the block is
+      # tied to GitHub-hosted runner egress IPs, which the WAF scores
+      # poorly. No reliable content-based workaround; updating the Hub
+      # description manually instead.
+      # - name: Update description
+      #   uses: peter-evans/dockerhub-description@v5
+      #   if: github.ref == 'refs/heads/master'
+      #   with:
+      #     username: ${{ secrets.DOCKER_USER }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
+      #     short-description: Packer plugin to build ARM images
+      #     readme-filepath: ./README.md

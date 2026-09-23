@@ -6,21 +6,31 @@
 # backwards compatibility). Please don't change it unless you know what
 # you're doing.
 Vagrant.configure("2") do |config|
-  config.vm.box = "ubuntu/jammy64"
-  config.disksize.size = '40GB'
+  # official Ubuntu cloud images, published for both libvirt and virtualbox;
+  # keep this aligned with the CI compile runner (ubuntu-latest) so the
+  # prebuilt plugin binary's glibc matches the guest
+  config.vm.box = "cloud-image/ubuntu-24.04"
+
+  config.vm.provider :libvirt do |lv|
+    lv.memory = 4096
+    lv.cpus = 2
+    # grow the ~10G cloud-image disk for the in-guest packer build;
+    # cloud-init growpart expands the root partition at boot
+    lv.machine_virtual_size = 40
+  end
 
   config.vm.provision "shell", inline: <<-SHELL
     set -o errtrace -o nounset -o pipefail -o errexit
-    curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-    sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
 
     apt-get update
     apt-get install -y qemu-user-static packer libarchive-tools
     #apt-get install -y git golang
-    #rm -rf packer-builder-arm *>/dev/null
+    #rm -rf packer-plugin-builder-arm *>/dev/null
 
-    #git clone https://github.com/mkaczanowski/packer-builder-arm
-    #cd packer-builder-arm
+    #git clone https://github.com/mkaczanowski/packer-plugin-builder-arm
+    #cd packer-plugin-builder-arm
     #go mod download
     #go build
 

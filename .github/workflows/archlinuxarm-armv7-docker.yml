@@ -11,14 +11,14 @@ jobs:
     name: Push archlinuxarm-armv7 image to docker registry
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go 1.21
-        uses: actions/setup-go@v5.0.0
-        with:
-          go-version: '1.21'
-        id: go
-
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Go
+        uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: go.mod
+        id: go
 
       - name: Get dependencies
         run: |
@@ -34,12 +34,17 @@ jobs:
           sudo apt-get install fdisk gdisk qemu-user-static libarchive-tools tar
 
       - name: Build
-        run: go build -v .
+        run: go build -v -o packer-plugin-builder-arm .
 
       - name: Install Packer
-        uses: hashicorp-contrib/setup-packer@v3
+        uses: hashicorp-contrib/setup-packer@v4
         with:
-          packer-version: 1.10.0
+          packer-version: 1.15.4
+
+      - name: Install arm builder plugin
+        run: |
+          chmod +x packer-plugin-builder-arm
+          sudo packer plugins install --path ./packer-plugin-builder-arm github.com/mkaczanowski/arm
 
       - name: Install packer plugins
         run: sudo packer init boards/armv7/archlinuxarm-docker.pkr.hcl
