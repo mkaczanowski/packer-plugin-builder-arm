@@ -189,6 +189,60 @@ To execute command within chroot environment you should use chroot communicator:
  }
 ]
 ```
+
+## DNS (resolv.conf) inside the chroot
+The chroot shares the host kernel but not its `/etc/resolv.conf`, so DNS is
+often broken inside provisioners (see [#144](https://github.com/mkaczanowski/packer-plugin-builder-arm/issues/144)).
+On many images the file is also a dangling symlink (e.g. systemd-resolved
+pointing into `/run`), which is why bind-mounting the host file via
+`image_chroot_mounts` fails with `mkdir .../etc/resolv.conf: file exists` —
+that mechanism only works for directories.
+
+Handle it in your provisioners instead: replace the file for the duration of
+the build and restore it afterwards, e.g. with a static nameserver (as done in
+[boards/raspberry-pi/archlinuxarm.json](./boards/raspberry-pi/archlinuxarm.json)):
+
+```hcl
+provisioner "shell" {
+  inline = [
+    "mv /etc/resolv.conf /etc/resolv.conf.bak || true",
+    "echo 'nameserver 8.8.8.8' > /etc/resolv.conf",
+  ]
+}
+
+# ... your provisioners ...
+
+provisioner "shell" {
+  inline = [
+    "rm -f /etc/resolv.conf",
+    "mv /etc/resolv.conf.bak /etc/resolv.conf || true",
+  ]
+}
+```
+
+Or copy the host resolver configuration in and restore the original file at
+the end:
+
+```hcl
+provisioner "shell" {
+  inline = ["mv /etc/resolv.conf /etc/resolv.conf.bak || true"]
+}
+provisioner "file" {
+  source      = "/etc/resolv.conf"
+  destination = "/etc/resolv.conf"
+}
+
+# ... your provisioners ...
+
+provisioner "shell" {
+  inline = [
+    "rm -f /etc/resolv.conf",
+    "mv /etc/resolv.conf.bak /etc/resolv.conf || true",
+  ]
+}
+```
+
+Skip the restore step if the image should keep working DNS settings.
 This plugin doesn't resize partitions on the base image. However, you can easily expand partition size at the boot time with a systemd service. [Here](./boards/raspberry-pi/archlinuxarm.json) you can find real-life example, where a raspberry pi root-fs partition expands to all available space on sdcard.
 
 # Flashing
