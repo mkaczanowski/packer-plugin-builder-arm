@@ -50,6 +50,7 @@ RUN apt-get update -qq \
  && apt-get install -qqy --no-install-recommends \
   ca-certificates \
   dosfstools \
+  e2fsprogs \
   fdisk \
   gdisk \
   kpartx \

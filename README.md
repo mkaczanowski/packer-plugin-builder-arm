@@ -25,7 +25,7 @@ Plugin mimics standard image creation process, such as:
 * building base empty image (dd)
 * partitioning (sgdisk / sfdisk)
 * filesystem creation (mkfs.type)
-* partition mapping (losetup)
+* partition mapping (losetup / kpartx)
 * filesystem mount (mount)
 * populate rootfs (tar/unzip/xz etc)
 * setup qemu + chroot
@@ -90,11 +90,11 @@ docker pull mkaczanowski/packer-plugin-builder-arm:latest
 
 Build a board:
 ```bash
-docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build mkaczanowski/packer-plugin-builder-arm:latest build boards/raspberry-pi/raspbian.json
+docker run --rm --privileged -v ${PWD}:/build mkaczanowski/packer-plugin-builder-arm:latest build boards/raspberry-pi/raspbian.json
 ```
 Build a board with more system packages (e.g. bmap-tools, zstd) can be added via the parameter `-extra-system-packages=...`:
 ```bash
-docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build mkaczanowski/packer-plugin-builder-arm:latest build boards/raspberry-pi/raspbian.json -extra-system-packages=bmap-tools,zstd
+docker run --rm --privileged -v ${PWD}:/build mkaczanowski/packer-plugin-builder-arm:latest build boards/raspberry-pi/raspbian.json -extra-system-packages=bmap-tools,zstd
 ```
 
 > **_NOTE:_** In above commands **latest** can also be replaced via e.g. **1.0.3** to get a specific container version.
@@ -106,11 +106,12 @@ docker build -t packer-plugin-builder-arm -f docker/Dockerfile .
 ```
 Run packer via the local built container:
 ```bash
-docker run --rm --privileged -v /dev:/dev -v ${PWD}:/build packer-plugin-builder-arm build boards/raspberry-pi/raspbian.json
+docker run --rm --privileged -v ${PWD}:/build packer-plugin-builder-arm build boards/raspberry-pi/raspbian.json
 ```
 
 # Dependencies
 * `sfdisk / sgdisk`
+* `kpartx`
 * `e2fsprogs`
 * `parted` (resize mode)
 * `resize2fs` (resize mode)

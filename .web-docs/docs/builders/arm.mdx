@@ -22,7 +22,7 @@ The build mimics a standard image creation process:
 - building a base empty image (`dd`)
 - partitioning (`sgdisk` / `sfdisk`)
 - filesystem creation (`mkfs.type`)
-- partition mapping (`losetup`)
+- partition mapping (`losetup` / `kpartx`)
 - filesystem mount (`mount`)
 - populating the rootfs (`tar`/`unzip`/`xz` etc.)
 - setting up qemu + chroot
