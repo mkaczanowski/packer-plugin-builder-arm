@@ -83,21 +83,35 @@ format error` (**linux** packer process within docker fails to load the outside 
 
 ### Usage via container from Docker Hub:
 
-Pull the latest version of the container to ensure the next commands are not using an old cached version of the container :
+Pull the latest version and capture its immutable digest:
 ```bash
-docker pull mkaczanowski/packer-plugin-builder-arm:latest
+IMAGE=mkaczanowski/packer-plugin-builder-arm:latest
+docker pull "${IMAGE}"
+VERIFIED_IMAGE=$(docker image inspect "${IMAGE}" --format '{{index .RepoDigests 0}}')
 ```
 
-Build a board:
+The published images are signed with [cosign](https://docs.sigstore.dev/cosign/signing/overview/) (keyless, via GitHub Actions OIDC). Since the container runs with `--privileged` and `-v /dev:/dev`, verify the immutable image before running it:
 ```bash
-docker run --rm --privileged -v ${PWD}:/build mkaczanowski/packer-plugin-builder-arm:latest build boards/raspberry-pi/raspbian.json
+cosign verify "${VERIFIED_IMAGE}" \
+  --certificate-identity-regexp='^https://github\.com/mkaczanowski/packer-plugin-builder-arm/\.github/workflows/docker\.yml@refs/(heads/master|tags/v[^/]+)$' \
+  --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+```
+
+Build a board using the verified digest:
+```bash
+docker run --rm --privileged -v ${PWD}:/build "${VERIFIED_IMAGE}" build boards/raspberry-pi/raspbian.json
 ```
 Build a board with more system packages (e.g. bmap-tools, zstd) can be added via the parameter `-extra-system-packages=...`:
 ```bash
-docker run --rm --privileged -v ${PWD}:/build mkaczanowski/packer-plugin-builder-arm:latest build boards/raspberry-pi/raspbian.json -extra-system-packages=bmap-tools,zstd
+docker run --rm --privileged -v ${PWD}:/build "${VERIFIED_IMAGE}" build boards/raspberry-pi/raspbian.json -extra-system-packages=bmap-tools,zstd
 ```
 
-> **_NOTE:_** In above commands **latest** can also be replaced via e.g. **1.0.3** to get a specific container version.
+> **_NOTE:_** In the `IMAGE` variable, **latest** can also be replaced via e.g. **1.0.3** to get a specific container version.
+
+The images also carry build provenance attestations (source repo, commit, builder), inspectable via:
+```bash
+docker buildx imagetools inspect mkaczanowski/packer-plugin-builder-arm:latest --format "{{ json .Provenance }}"
+```
 
 ### Usage via local container build (supports amd64/aarch64 hosts):
 Build the container locally:
