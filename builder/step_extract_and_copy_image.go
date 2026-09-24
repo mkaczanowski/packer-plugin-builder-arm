@@ -49,19 +49,10 @@ func (s *StepExtractAndCopyImage) Run(_ context.Context, state multistep.StateBa
 		// step 3: unarchive file within temporary dir
 		ui.Message(fmt.Sprintf("unpacking %s to %s", archivePath, config.ImageConfig.ImagePath))
 		if len(config.RemoteFileConfig.FileUnarchiveCmd) != 0 {
-			cmd := make([]string, len(config.RemoteFileConfig.FileUnarchiveCmd))
-			vars := map[string]string{
+			cmd := interpolateUnarchiveCmd(config.RemoteFileConfig.FileUnarchiveCmd, map[string]string{
 				"$ARCHIVE_PATH": dst,
 				"$TMP_DIR":      dir,
-			}
-
-			for i, elem := range config.RemoteFileConfig.FileUnarchiveCmd {
-				if _, ok := vars[elem]; ok {
-					cmd[i] = vars[elem]
-				} else {
-					cmd[i] = elem
-				}
-			}
+			})
 
 			ui.Message(fmt.Sprintf("unpacking with custom command: %s", cmd))
 			out, err = exec.Command(cmd[0], cmd[1:]...).CombinedOutput()

@@ -150,7 +150,7 @@ Describes the remote file that is going to be used as base image or rootfs archi
 
 Downloads of the `file_urls` are done with the help of `github.com/hashicorp/go-getter`, which supports various protocols: local files, http(s) and various others, see https://github.com/hashicorp/go-getter#supported-protocols-and-detectors). Downloading via more protocols can be done by using other tools (curl, wget, rclone, ...) before running packer and referencing the downloaded files as local file in `file_urls`.
 
-The `file_unarchive_cmd` is optional and should be used if the standard golang archiver can't handle the archive format.
+The `file_unarchive_cmd` is optional and should be used if the standard golang archiver can't handle the archive format. The variables (`$ARCHIVE_PATH`, `$MOUNTPOINT`/`$TMP_DIR`) are also substituted when embedded within an argument, e.g. `"file_unarchive_cmd": ["7z", "x", "$ARCHIVE_PATH", "image.img", "-o$TMP_DIR"]`.
 
 Raw images format (`.img` or `.iso`) can be used by defining the `file_target_extension` appropriately.
 
