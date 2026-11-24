@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   compile:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Retrieve cache
         id: cache-key
@@ -85,7 +85,7 @@ jobs:
           - rock-4b/debos-radxa.pkr.hcl
           - wandboard/archlinuxarm.json
     name: Build ${{ matrix.boards }} image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       # shared so that `sudo packer build` (which resets HOME) still finds
       # the arm plugin installed by the non-sudo steps below
