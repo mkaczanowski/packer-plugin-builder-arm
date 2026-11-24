@@ -136,7 +136,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Install cosign
-        uses: sigstore/cosign-installer@v4.1.2
+        uses: sigstore/cosign-installer@v4.1.3
 
       # Sign by digest so the signature covers the multi-arch manifest list.
       - name: Sign image with cosign
