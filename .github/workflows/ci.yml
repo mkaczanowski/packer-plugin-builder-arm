@@ -28,7 +28,7 @@ jobs:
 
       - name: Set up Go
         if: steps.cache-key.outputs.cache-hit != 'true'
-        uses: actions/setup-go@v7.0.0
+        uses: actions/setup-go@v7.1.0
         with:
           go-version-file: go.mod
         id: go
