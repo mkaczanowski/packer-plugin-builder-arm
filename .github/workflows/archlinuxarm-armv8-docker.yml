@@ -9,7 +9,7 @@ jobs:
 
   build:
     name: Push archlinuxarm-armv7 image to docker registry
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v7.0.1
